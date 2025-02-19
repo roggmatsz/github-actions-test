@@ -6,13 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+    contents: write
+
 jobs:
-  test_job:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    steps:
-      - name: Print Event
-        run: echo ${{ toJson(github.event) }}
   bump-version-and-tag:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
