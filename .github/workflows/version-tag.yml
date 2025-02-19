@@ -127,7 +127,7 @@ jobs:
       
       - name: Create and push tag
         run: |
-          if [[ ! "${{ env.NEW_TAG }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ! "${{ env.NEW_TAG }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Error: Invalid tag format: ${{ env.NEW_TAG }}"
             exit 1
           fi
@@ -137,7 +137,7 @@ jobs:
           
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           
-          git tag -a ${{ env.NEW_TAG }} -m "Release ${{ env.NEW_TAG }}
+          git tag -a "v${{ env.NEW_TAG }}" -m "Release ${{ env.NEW_TAG }}
           
           Major: Controlled via setup.py
           Minor: PR #${{ env.MINOR_VERSION }} since last major version
