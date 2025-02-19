@@ -33,15 +33,15 @@ jobs:
             await github.rest.git.createTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag: `v${newVersion}`,
+              tag: newVersion,
               message: `Release ${newVersion}`,
-              sha: context.sha,
+              object: context.sha,  # Use 'object' and provide the SHA
               type: 'commit'
             });
             await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: `refs/heads/release/v${newVersion}`,
+              ref: `refs/heads/release/${newVersion}`,
               sha: context.sha
             })
       - name: Update setup.py
