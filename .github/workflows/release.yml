@@ -28,7 +28,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const newVersion = 'v' + ${{ steps.bump_version.outputs.new_version }}; // Correct way
+            const newVersion = 'v' + '${{ steps.bump_version.outputs.new_version }}'; // Correct way
             console.log(`Tagging version ${newVersion}`);
             await github.rest.git.createTag({
               owner: context.repo.owner,
