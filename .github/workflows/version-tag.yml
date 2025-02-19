@@ -1,5 +1,11 @@
 name: Create Semver Version Tag
 
+env:
+    MAJOR_VERSION: 0
+    MINOR_VERSION: 0
+    REVISION: 1
+    NEW_TAG: v0.0.1
+
 on: 
   pull_request_target:
     types: [closed]
@@ -8,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   create-tag:
@@ -27,18 +34,44 @@ jobs:
       - name: Get major version from setup.py
         id: get-major
         run: |
-          if [ -f setup.py ]; then
-            major_version=$(grep -oP 'version="\K\d+' setup.py || echo "")
-            if [ -z "$major_version" ]; then
-              echo "Error: Could not find valid major version in setup.py"
-              echo "MAJOR_VERSION=0" >> $GITHUB_ENV
-            else
-              echo "MAJOR_VERSION=$major_version" >> $GITHUB_ENV
-            fi
-          else
-            echo "Warning: setup.py not found, defaulting to major version 0"
-            echo "MAJOR_VERSION=0" >> $GITHUB_ENV
+          if [ ! -f setup.py ]; then
+            echo "Error: setup.py not found"
+            exit 1
           fi
+          
+          echo "Contents of setup.py:"
+          cat setup.py
+          
+          echo "\nTrying different parsing methods..."
+          
+          # Try multiple parsing patterns
+          version1=$(grep -oP 'version="\K\d+' setup.py || echo "")
+          echo "Pattern 1 result: $version1"
+          
+          version2=$(grep -oP "version='\K\d+" setup.py || echo "")
+          echo "Pattern 2 result: $version2"
+          
+          version3=$(grep -oP 'version\s*=\s*["\']?\K\d+' setup.py || echo "")
+          echo "Pattern 3 result: $version3"
+          
+          # Use the first non-empty result
+          major_version=""
+          for v in "$version1" "$version2" "$version3"; do
+            if [ ! -z "$v" ]; then
+              major_version="$v"
+              break
+            fi
+          done
+          
+          if [ -z "$major_version" ]; then
+            echo "Error: Could not find valid major version in setup.py"
+            echo "Current directory: $(pwd)"
+            echo "Files in directory: $(ls -la)"
+            exit 1
+          fi
+          
+          echo "Found major version: $major_version"
+          echo "MAJOR_VERSION=$major_version" >> $GITHUB_ENV
         
       - name: Count merged PRs
         id: count-prs
