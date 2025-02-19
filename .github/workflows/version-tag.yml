@@ -43,15 +43,21 @@ jobs:
       - name: Count PRs since major version change
         id: count-prs
         run: |
-          # Get the commit hash of the last major version change
+          # Get last major version bump commit or initial commit if none exists
           last_major_commit=$(git log --grep="Bump major version" -n 1 --format="%H" || git rev-list --max-parents=0 HEAD)
+          echo "Last major version commit: $last_major_commit"
           
-          # Count merged PRs to main since last major version change
-          pr_count=$(git log --merges $last_major_commit..HEAD --format="%s" | grep -c "Merge pull request" || echo "0")
+          # Count merged PRs by looking at merge commits
+          pr_count=$(git log --merges "$last_major_commit"..HEAD --format="%s" | 
+                     grep -i "merge pull request" | wc -l)
           
-          # Increment by 1 to include current PR
+          # Debug output
+          echo "Found merge commits:"
+          git log --merges "$last_major_commit"..HEAD --format="%h %s"
+          
+          # Add 1 for the current PR being merged
           minor_version=$((pr_count + 1))
-          echo "Minor version calculated as: $minor_version"
+          echo "Total PR count (including current): $minor_version"
           echo "MINOR_VERSION=$minor_version" >> $GITHUB_ENV
       
       - name: Count commits in PR branch
