@@ -39,29 +39,7 @@ jobs:
             exit 1
           fi
           
-          echo "Contents of setup.py:"
-          cat setup.py
-          
-          echo "\nTrying different parsing methods..."
-          
-          # Try multiple parsing patterns
-          version1=$(grep -oP 'version="\K\d+' setup.py || echo "")
-          echo "Pattern 1 result: $version1"
-          
-          version2=$(grep -oP "version='\K\d+" setup.py || echo "")
-          echo "Pattern 2 result: $version2"
-          
-          version3=$(grep -oP 'version\s*=\s*["\']?\K\d+' setup.py || echo "")
-          echo "Pattern 3 result: $version3"
-          
-          # Use the first non-empty result
-          major_version=""
-          for v in "$version1" "$version2" "$version3"; do
-            if [ ! -z "$v" ]; then
-              major_version="$v"
-              break
-            fi
-          done
+          major_version=$(grep -oP "version='\K\d+" setup.py || echo "")
           
           if [ -z "$major_version" ]; then
             echo "Error: Could not find valid major version in setup.py"
