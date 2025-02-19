@@ -64,6 +64,7 @@ jobs:
               ! [[ "${{ env.MINOR_VERSION }}" =~ ^[0-9]+$ ]] || \
               ! [[ "${{ env.REVISION }}" =~ ^[0-9]+$ ]]; then
             echo "Error: Invalid version components"
+            echo "version string: ${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.REVISION }}""
             exit 1
           fi
           new_tag="v${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.REVISION }}"
