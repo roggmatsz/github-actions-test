@@ -1,0 +1,69 @@
+name: Create Semver Version Tag
+
+on: 
+  pull_request_target:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+    contents: write
+
+jobs:
+  create-tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Get major version from setup.py
+        id: get-major-version
+        run: |
+          # Extract version from setup.py (assuming format like version="1.0.0")
+          major_version=$(grep -oP 'version="\K\d+' setup.py || echo "0")
+          echo "MAJOR_VERSION=$major_version" >> $GITHUB_ENV
+      - name: Count PRs since major version change
+        id: count-prs
+        run: |
+          # Get the commit hash of the last major version change
+          last_major_commit=$(git log --grep="Bump major version" -n 1 --format="%H" || git rev-list --max-parents=0 HEAD)
+          
+          # Count merged PRs to main since last major version change
+          pr_count=$(git log --merges $last_major_commit..HEAD --format="%s" | grep -c "Merge pull request" || echo "0")
+          
+          # Increment by 1 to include current PR
+          minor_version=$((pr_count + 1))
+          echo "MINOR_VERSION=$minor_version" >> $GITHUB_ENV
+      - name: Count commits in PR branch
+        id: count-commits
+        run: |
+          # Get the base commit where the PR branch diverged from main
+          base_commit=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Count commits in the PR branch
+          commit_count=$(git rev-list --count $base_commit..${{ github.event.pull_request.head.sha }})
+          echo "REVISION=$commit_count" >> $GITHUB_ENV
+      - name: Generate new tag
+        id: generate-tag
+        run: |
+          new_tag="v${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.REVISION }}"
+          echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
+      - Create and push tag
+        id: push-tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a ${{ env.NEW_TAG }} -m "Release ${{ env.NEW_TAG }}
+          
+          Major: Controlled via setup.py
+          Minor: PR #${{ env.MINOR_VERSION }} since last major version
+          Revision: ${{ env.REVISION }} commits in this PR"
+          
+          git push origin ${{ env.NEW_TAG }}
