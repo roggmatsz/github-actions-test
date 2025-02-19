@@ -36,7 +36,7 @@ jobs:
               tag: newVersion,
               message: `Release ${newVersion}`,
               object: {
-                context.sha,  # Use 'object' and provide the SHA
+                sha: context.payload.pull_request.merge_commit_sha || context.payload.head.sha, # Correct way to access SHA
                 type: 'commit'
               }
             });
@@ -44,7 +44,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/heads/release/${newVersion}`,
-              sha: context.sha
+              sha: context.payload.pull_request.merge_commit_sha || context.payload.head.sha # Correct way to access SHA
             })
       - name: Update setup.py
         run: |
