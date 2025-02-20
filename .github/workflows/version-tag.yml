@@ -144,3 +144,40 @@ jobs:
           Revision: ${{ env.REVISION }} commits in this PR"
           
           git push origin "v${{ env.NEW_TAG }}"
+
+  update-staging:
+    needs: create-tag
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: staging
+
+      - name: Update version in setup.py
+        run: |
+          # Create backup
+          cp setup.py setup.py.bak
+          
+          # Update version in setup.py
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS version of sed
+            sed -i '' 's/version="[^"]*"/version="${{ env.NEW_TAG}}"/g' setup.py
+            sed -i '' "s/version='[^']*'/version='${{ env.NEW_TAG }}'/g" setup.py
+          else
+            # Linux version of sed
+            sed -i 's/version="[^"]*"/version="${{ env.NEW_TAG }}"/g' setup.py
+            sed -i "s/version='[^']*'/version='${{ env.NEW_TAG }}'/g" setup.py
+          fi
+          
+          echo "Updated setup.py contents:"
+          cat setup.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add setup.py
+          git commit -m "Update version to ${{ env.NEW_TAG }}"
+          git push origin HEAD:staging
