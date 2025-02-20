@@ -98,7 +98,8 @@ jobs:
           
           new_tag="${MAJOR_VERSION}.${MINOR_VERSION}.${REVISION}"
           echo "Generated tag: $new_tag"
-          echo "NEW_TAG=$new_tag" >> $GITHUB_OUTPUT
+          echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
+          echo "::set-output name=NEW_TAG::$new_tag"
 
       - name: Update setup.py
         run: |
@@ -159,22 +160,24 @@ jobs:
 
       - name: Update version in setup.py
         run: |
+          # confirm that NEW_TAG exists
+          if [ -z "${{ needs.create-tag.outputs.NEW_TAG }}" ]; then
+            echo "Error: NEW_TAG not set"
+            exit 1
+          fi
+
           # Create backup
           cp setup.py setup.py.bak
-
-          # Get new tag from previous job
-          new_tag="${{ needs.create-tag.outputs.NEW_TAG }}"
-          echo "New tag value: $new_tag"
           
           # Update version in setup.py
           if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS version of sed
-            sed -i '' 's/version="[^"]*"/version="$new_tag"/g' setup.py
-            sed -i '' "s/version='[^']*'/version='$new_tag'/g" setup.py
+            sed -i '' 's/version="[^"]*"/version="${{ needs.create-tag.outputs.NEW_TAG }}"/g' setup.py
+            sed -i '' "s/version='[^']*'/version='${{ needs.create-tag.outputs.NEW_TAG }}'/g" setup.py
           else
             # Linux version of sed
-            sed -i 's/version="[^"]*"/version="$new_tag"/g' setup.py
-            sed -i "s/version='[^']*'/version='$new_tag'/g" setup.py
+            sed -i 's/version="[^"]*"/version="${{ needs.create-tag.outputs.NEW_TAG }}"/g' setup.py
+            sed -i "s/version='[^']*'/version='${{ needs.create-tag.outputs.NEW_TAG }}'/g" setup.py
           fi
           
           echo "Updated setup.py contents:"
@@ -186,5 +189,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add setup.py
-          git commit -m "Update version to $NEW_TAG"
+          git commit -m "Update version to ${{ needs.create-tag.outputs.NEW_TAG }}"
           git push origin HEAD:staging
