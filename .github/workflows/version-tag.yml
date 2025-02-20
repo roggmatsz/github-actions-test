@@ -19,8 +19,6 @@ jobs:
   create-tag:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    outputs:
-      new_tag: ${{ steps.generate-tag.outputs.NEW_TAG }}
 
     steps:
       - uses: actions/checkout@v4
@@ -162,7 +160,7 @@ jobs:
           cp setup.py setup.py.bak
 
           # Get new tag from previous job
-          new_tag="${{ needs.create-tag.outputs.new_tag }}"
+          new_tag="$NEW_TAG"
           echo "New tag value: $new_tag"
           
           # Update version in setup.py
