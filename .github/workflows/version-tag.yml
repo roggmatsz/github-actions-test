@@ -14,6 +14,8 @@ jobs:
   create-tag:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    outputs:
+      NEW_TAG: ${{ steps.generate-tag.outputs.NEW_TAG }}
 
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +45,7 @@ jobs:
           fi
           
           echo "Found major version: $major_version"
-          echo "MAJOR_VERSION=$major_version" >> $GITHUB_STATE
+          echo "MAJOR_VERSION=$major_version" >> $GITHUB_OUTPUT
         
       - name: Count merged PRs
         id: count-prs
@@ -59,7 +61,7 @@ jobs:
             }' -f owner="${{ github.repository_owner }}" -f repo="${{ github.event.repository.name }}" | jq '.data.repository.pullRequests.totalCount')
           
           echo "Total merged PRs to main: $pr_count"
-          echo "MINOR_VERSION=$pr_count" >> $GITHUB_STATE
+          echo "MINOR_VERSION=$pr_count" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -74,16 +76,27 @@ jobs:
           fi
           
           echo "Revision count calculated as: $commit_count"
-          echo "REVISION=$commit_count" >> $GITHUB_STATE
+          echo "REVISION=$commit_count" >> $GITHUB_OUTPUT
       
       - name: Generate new tag
         id: generate-tag
         run: |
-          major="${MAJOR_VERSION:-0}"
-          minor="${MINOR_VERSION:-0}"
-          revision="${REVISION:-1}"
+          if [[ -z "$MAJOR_VERSION" ]]; then
+            echo "Error: MAJOR_VERSION not set"
+            exit 1
+          fi
+
+          if [[ -z "$MINOR_VERSION" ]]; then
+            echo "Error: MINOR_VERSION not set"
+            exit 1
+          fi
+
+          if [[ -z "$REVISION" ]]; then
+            echo "Error: REVISION not set"
+            exit 1
+          fi
           
-          new_tag="${major}.${minor}.${revision}"
+          new_tag="${MAJOR_VERSION}.${MINOR_VERSION}.${REVISION}"
           echo "Generated tag: $new_tag"
           echo "NEW_TAG=$new_tag" >> $GITHUB_OUTPUT
 
@@ -150,7 +163,7 @@ jobs:
           cp setup.py setup.py.bak
 
           # Get new tag from previous job
-          new_tag="$NEW_TAG"
+          new_tag="${{ needs.create-tag.outputs.NEW_TAG }}"
           echo "New tag value: $new_tag"
           
           # Update version in setup.py
