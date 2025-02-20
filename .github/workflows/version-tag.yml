@@ -20,6 +20,8 @@ jobs:
   create-tag:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.generate-tag.outputs.NEW_TAG }}
 
     steps:
       - uses: actions/checkout@v4
@@ -96,6 +98,7 @@ jobs:
           new_tag="${major}.${minor}.${revision}"
           echo "Generated tag: $new_tag"
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
+          echo "::set-output name=NEW_TAG::$new_tag" # Set the output
 
       - name: Update setup.py
         run: |
@@ -159,18 +162,19 @@ jobs:
           # Create backup
           cp setup.py setup.py.bak
 
-          # Output current tag value
-          echo "Current tag value: ${{ env.NEW_TAG }}"
+          # Get new tag from previous job
+          new_tag="${{ needs.create-tag.outputs.new_tag }}"
+          echo "New tag value: $new_tag"
           
           # Update version in setup.py
           if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS version of sed
-            sed -i '' 's/version="[^"]*"/version="${{ env.NEW_TAG}}"/g' setup.py
-            sed -i '' "s/version='[^']*'/version='${{ env.NEW_TAG }}'/g" setup.py
+            sed -i '' 's/version="[^"]*"/version="$new_tag"/g' setup.py
+            sed -i '' "s/version='[^']*'/version='$new_tag'/g" setup.py
           else
             # Linux version of sed
-            sed -i 's/version="[^"]*"/version="${{ env.NEW_TAG }}"/g' setup.py
-            sed -i "s/version='[^']*'/version='${{ env.NEW_TAG }}'/g" setup.py
+            sed -i 's/version="[^"]*"/version="$new_tag"/g' setup.py
+            sed -i "s/version='[^']*'/version='$new_tag'/g" setup.py
           fi
           
           echo "Updated setup.py contents:"
