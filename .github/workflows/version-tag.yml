@@ -139,7 +139,7 @@ jobs:
           
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           
-          git tag -a "v$NEW_TAG -m "Release v$NEW_TAG
+          git tag -a "v$NEW_TAG" -m "Release v$NEW_TAG
           
           Major: Controlled via setup.py
           Minor: PR #${{ env.MINOR_VERSION }} since last major version
