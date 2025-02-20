@@ -186,5 +186,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add setup.py
-          git commit -m "Update version to ${{ env.NEW_TAG }}"
+          git commit -m "Update version to ${{ needs.create-tag.outputs.new_tag }}"
           git push origin HEAD:staging
