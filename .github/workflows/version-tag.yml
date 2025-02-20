@@ -1,10 +1,5 @@
 name: Create Semver Version Tag
 
-env:
-    MAJOR_VERSION: 0
-    MINOR_VERSION: 0
-    REVISION: 1
-
 on: 
   pull_request_target:
     types: [closed]
