@@ -45,7 +45,7 @@ jobs:
           fi
           
           echo "Found major version: $major_version"
-          echo "MAJOR_VERSION=$major_version" >> $GITHUB_OUTPUT
+          echo "MAJOR_VERSION=$major_version" >> $GITHUB_ENV
         
       - name: Count merged PRs
         id: count-prs
@@ -61,7 +61,7 @@ jobs:
             }' -f owner="${{ github.repository_owner }}" -f repo="${{ github.event.repository.name }}" | jq '.data.repository.pullRequests.totalCount')
           
           echo "Total merged PRs to main: $pr_count"
-          echo "MINOR_VERSION=$pr_count" >> $GITHUB_OUTPUT
+          echo "MINOR_VERSION=$pr_count" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -76,7 +76,7 @@ jobs:
           fi
           
           echo "Revision count calculated as: $commit_count"
-          echo "REVISION=$commit_count" >> $GITHUB_OUTPUT
+          echo "REVISION=$commit_count" >> $GITHUB_ENV
       
       - name: Generate new tag
         id: generate-tag
