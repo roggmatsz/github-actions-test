@@ -158,6 +158,9 @@ jobs:
         run: |
           # Create backup
           cp setup.py setup.py.bak
+
+          # Output current tag value
+          echo "Current tag value: ${{ env.NEW_TAG }}"
           
           # Update version in setup.py
           if [[ "$OSTYPE" == "darwin"* ]]; then
