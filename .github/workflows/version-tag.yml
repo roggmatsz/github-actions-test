@@ -84,13 +84,9 @@ jobs:
       - name: Generate new tag
         id: generate-tag
         run: |
-          major="$MAJOR_VERSION"
-          minor="$MINOR_VERSION"
-          revision="$REVISION"
-          
-          [[ -z "$major" ]] && major="0"
-          [[ -z "$minor" ]] && minor="0"
-          [[ -z "$revision" ]] && revision="1"
+          major="${MAJOR_VERSION:-0}"
+          minor="${MINOR_VERSION:-0}"
+          revision="${REVISION:-1}"
           
           new_tag="${major}.${minor}.${revision}"
           echo "Generated tag: $new_tag"
