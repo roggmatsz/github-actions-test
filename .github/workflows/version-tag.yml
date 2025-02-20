@@ -4,7 +4,6 @@ env:
     MAJOR_VERSION: 0
     MINOR_VERSION: 0
     REVISION: 1
-    NEW_TAG: v0.0.1
 
 on: 
   pull_request_target:
@@ -108,12 +107,12 @@ jobs:
           # Update version in setup.py
           if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS version of sed
-            sed -i '' 's/version="[^"]*"/version="${{ env.NEW_TAG}}"/g' setup.py
-            sed -i '' "s/version='[^']*'/version='${{ env.NEW_TAG }}'/g" setup.py
+            sed -i '' 's/version="[^"]*"/version="$NEW_TAG"/g' setup.py
+            sed -i '' "s/version='[^']*'/version='$NEW_TAG'/g" setup.py
           else
             # Linux version of sed
-            sed -i 's/version="[^"]*"/version="${{ env.NEW_TAG }}"/g' setup.py
-            sed -i "s/version='[^']*'/version='${{ env.NEW_TAG }}'/g" setup.py
+            sed -i 's/version="[^"]*"/version="NEW_TAG"/g' setup.py
+            sed -i "s/version='[^']*'/version='$NEW_TAG'/g" setup.py
           fi
           
           echo "Updated setup.py contents:"
@@ -125,13 +124,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add setup.py
-          git commit -m "Update version to ${{ env.NEW_TAG }}"
+          git commit -m "Update version to $NEW_TAG"
           git push origin HEAD:main
       
       - name: Create and push tag
         run: |
-          if [[ ! "${{ env.NEW_TAG }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Error: Invalid tag format: ${{ env.NEW_TAG }}"
+          if [[ ! "$NEW_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid tag format: $NEW_TAG"
             exit 1
           fi
           
@@ -140,13 +139,13 @@ jobs:
           
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           
-          git tag -a "v${{ env.NEW_TAG }}" -m "Release v${{ env.NEW_TAG }}
+          git tag -a "v$NEW_TAG -m "Release v$NEW_TAG
           
           Major: Controlled via setup.py
           Minor: PR #${{ env.MINOR_VERSION }} since last major version
           Revision: ${{ env.REVISION }} commits in this PR"
           
-          git push origin "v${{ env.NEW_TAG }}"
+          git push origin "v$NEW_TAG"
 
   update-staging:
     needs: create-tag
@@ -186,5 +185,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add setup.py
-          git commit -m "Update version to ${{ env.NEW_TAG }}"
+          git commit -m "Update version to ${{ needs.create-tag.outputs.new_tag }}"
           git push origin HEAD:staging
