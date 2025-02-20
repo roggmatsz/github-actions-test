@@ -2,5 +2,5 @@ from setuptools import setup
 
 setup(
     name='some_python_program',
-    version='0.31.3'
+    version='v0.0.1'
 )
