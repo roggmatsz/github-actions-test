@@ -48,7 +48,7 @@ jobs:
           fi
           
           echo "Found major version: $major_version"
-          echo "MAJOR_VERSION=$major_version" >> $GITHUB_ENV
+          echo "MAJOR_VERSION=$major_version" >> $GITHUB_STATE
         
       - name: Count merged PRs
         id: count-prs
@@ -64,7 +64,7 @@ jobs:
             }' -f owner="${{ github.repository_owner }}" -f repo="${{ github.event.repository.name }}" | jq '.data.repository.pullRequests.totalCount')
           
           echo "Total merged PRs to main: $pr_count"
-          echo "MINOR_VERSION=$pr_count" >> $GITHUB_ENV
+          echo "MINOR_VERSION=$pr_count" >> $GITHUB_STATE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -79,14 +79,14 @@ jobs:
           fi
           
           echo "Revision count calculated as: $commit_count"
-          echo "REVISION=$commit_count" >> $GITHUB_ENV
+          echo "REVISION=$commit_count" >> $GITHUB_STATE
       
       - name: Generate new tag
         id: generate-tag
         run: |
-          major="${{ env.MAJOR_VERSION }}"
-          minor="${{ env.MINOR_VERSION }}"
-          revision="${{ env.REVISION }}"
+          major="$MAJOR_VERSION"
+          minor="$MINOR_VERSION"
+          revision="$REVISION"
           
           [[ -z "$major" ]] && major="0"
           [[ -z "$minor" ]] && minor="0"
@@ -94,8 +94,7 @@ jobs:
           
           new_tag="${major}.${minor}.${revision}"
           echo "Generated tag: $new_tag"
-          echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
-          echo "::set-output name=NEW_TAG::$new_tag" # Set the output
+          echo "NEW_TAG=$new_tag" >> $GITHUB_OUTPUT
 
       - name: Update setup.py
         run: |
@@ -140,8 +139,8 @@ jobs:
           git tag -a "v$NEW_TAG" -m "Release v$NEW_TAG
           
           Major: Controlled via setup.py
-          Minor: PR #${{ env.MINOR_VERSION }} since last major version
-          Revision: ${{ env.REVISION }} commits in this PR"
+          Minor: PR #$MINOR_VERSION since last major version
+          Revision: $REVISION commits in this PR"
           
           git push origin "v$NEW_TAG"
 
